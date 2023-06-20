@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  kafka-exporter:
+    image: danielqsj/kafka-exporter
+    container_name: kafka-exporter 
+    command:
+      - '--kafka.server=kafka:9092'
+      #- '--kafka.server=another-server'
+    networks:
+      - monitor
+    depends_on:
+      - prometheus
+    restart: always

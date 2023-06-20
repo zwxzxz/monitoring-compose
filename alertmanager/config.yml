@@ -1,0 +1,23 @@
+global:
+  resolve_timeout: 5m #每5分钟检测一次是否恢复
+
+route:  # 设置报警分发策略
+  group_by: ['alertname'] # 分组标签
+  group_wait: 10s      # 告警等待时间。告警产生后等待10s，如果有同组告警一起发出
+  group_interval: 10s  # 两组告警的间隔时间
+  repeat_interval: 5m  # 重复告警的间隔时间，减少相同告警的发送频率 此处为测试设置>为1分钟 
+  receiver: 'dingtalk-webhook'  # 默认接收者
+
+receivers:
+  - name: dingtalk-webhook
+    webhook_configs:
+      - send_resolved: true
+        url: 'http://prometheus-webhook-dingtalk:8060/dingtalk/webhook1/send'
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'dev', 'instance']
+

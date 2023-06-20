@@ -1,0 +1,89 @@
+version: '3'
+
+services:
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/config.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - 19090:9090
+    restart: always
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+      - /etc/localtime:/etc/localtime
+      - /etc/hosts:/etc/hosts
+    networks:
+      - monitor
+    depends_on:
+      - cadvisor
+
+  cadvisor:
+    image: registry.cn-hangzhou.aliyuncs.com/kongxin/cadvisor
+    container_name: cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - monitor
+    restart: always
+
+  grafana:
+    image: grafana/grafana
+    user: "472"
+    container_name: grafana
+    depends_on:
+      - prometheus
+    ports:
+      - 13000:3000
+    restart: always
+    env_file:
+      - ./grafana/grafana.config
+    volumes:
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitor
+
+  alertmanager:
+    image: prom/alertmanager
+    container_name: alertmanager
+    ports:
+      - 19093:9093
+    volumes:
+      - ./alertmanager/:/etc/alertmanager/
+    networks:
+      - monitor
+    restart: always
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+
+  prometheus-webhook-dingtalk:
+    image: timonwong/prometheus-webhook-dingtalk
+    container_name: prometheus-webhook-dingtalk
+    command:
+      - '--web.listen-address=:8060'
+      - '--config.file=/config/config.yaml'
+    volumes:
+      - ./prometheus-webhook-dingtalk/config/:/config/
+    networks:
+      - monitor
+    restart: always
+    depends_on:
+      - alertmanager
+
+networks:
+  monitor:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  grafana_data: {}

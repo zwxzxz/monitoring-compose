@@ -1,0 +1,21 @@
+version: '3'
+
+#可以单独创建一个用户
+#CREATE USER 'exporter'@'localhost' IDENTIFIED BY 'XXXXXXXX';
+#GRANT PROCESS, REPLICATION CLIENT ON *.* TO 'exporter'@'localhost';
+#GRANT SELECT ON performance_schema.* TO 'exporter'@'localhost';
+
+services:
+  mysqld-exporter:
+    image: prom/mysqld-exporter
+    container_name: mysqld-exporter 
+    #links:
+    #  - 'my_mysql_container:bdd'
+    environment:
+      - 'DATA_SOURCE_NAME=root:1234qwer@(172.16.20.140:3306)/'
+    networks:
+      - monitor
+    depends_on:
+      - prometheus
+    restart: always
+
