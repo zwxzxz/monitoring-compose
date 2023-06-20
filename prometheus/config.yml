@@ -45,12 +45,12 @@ scrape_configs:
     labels:
       instance: mysql
 
-#- job_name: kafka
-#  scrape_interval: 15s
-#  static_configs:
-#  - targets: ['kafka-exporter:9308']
-#    labels:
-#      instance: kafka
+- job_name: kafka
+  scrape_interval: 15s
+  static_configs:
+  - targets: ['kafka-exporter:9308']
+    labels:
+      instance: kafka
 
 - job_name: redis
   scrape_interval: 15s
@@ -59,10 +59,10 @@ scrape_configs:
     labels:
       instance: redis
 
-- job_name: iotdb
-  scrape_interval: 15s
-  static_configs:
-  - targets: ['172.16.21.109:9091']
-    labels:
-      instance: iotdb
+#- job_name: iotdb
+#  scrape_interval: 15s
+#  static_configs:
+#  - targets: ['172.16.21.109:9091']
+#    labels:
+#      instance: iotdb
 
