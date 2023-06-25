@@ -8,9 +8,16 @@ services:
       - /:/host:ro,rslave
     command: 
       - '--path.rootfs=/host'
+    expose:
+      - '9100'
     networks:
       - monitor
-    depends_on:
-      - prometheus
+    #depends_on:
+    #  - prometheus
     restart: always
+
+networks:
+  monitor:
+    name: prometheus-docker-compose_monitor
+    external: true
 

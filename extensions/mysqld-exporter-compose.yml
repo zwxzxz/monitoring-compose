@@ -13,9 +13,15 @@ services:
     #  - 'my_mysql_container:bdd'
     environment:
       - 'DATA_SOURCE_NAME=root:1234qwer@(172.16.20.140:3306)/'
+    expose:
+      - '9104'
     networks:
       - monitor
-    depends_on:
-      - prometheus
+    #depends_on:
+    #  - prometheus
     restart: always
 
+networks:
+  monitor:
+    name: prometheus-docker-compose_monitor
+    external: true

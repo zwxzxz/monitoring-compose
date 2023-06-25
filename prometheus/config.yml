@@ -59,10 +59,17 @@ scrape_configs:
     labels:
       instance: redis
 
-#- job_name: iotdb
-#  scrape_interval: 15s
-#  static_configs:
-#  - targets: ['172.16.21.109:9091']
-#    labels:
-#      instance: iotdb
+- job_name: iotdb
+  scrape_interval: 15s
+  static_configs:
+  - targets: ['8.130.140.140:9091']
+    labels:
+      instance: iotdb
+
+- job_name: clickhouse
+  scrape_interval: 15s
+  static_configs:
+  - targets: ['8.130.140.140:9363']
+    labels:
+      instance: clickhouse
 

@@ -7,8 +7,15 @@ services:
     command:
       - '--redis.addr=redis://172.16.20.142:6379'
       - '--redis.password=123456'
+    expose:
+      - '9121'
     networks:
       - monitor
-    depends_on:
-      - prometheus
+    #depends_on:
+    #  - prometheus
     restart: always
+
+networks:
+  monitor:
+    name: prometheus-docker-compose_monitor
+    external: true

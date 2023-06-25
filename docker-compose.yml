@@ -31,6 +31,8 @@ services:
       - /var/run:/var/run:rw
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+    expose:
+      - '8080'
     networks:
       - monitor
     restart: always
@@ -74,6 +76,8 @@ services:
       - '--config.file=/config/config.yaml'
     volumes:
       - ./prometheus-webhook-dingtalk/config/:/config/
+    expose:
+      - '8060'
     networks:
       - monitor
     restart: always

@@ -6,8 +6,15 @@ services:
     container_name: kafka-exporter 
     command:
       - '--kafka.server=8.130.140.140:9092'
+    expose:
+      - '9308'
     networks:
       - monitor
-    depends_on:
-      - prometheus
+    #depends_on:
+    #  - prometheus
     restart: always
+
+networks:
+  monitor:
+    name: prometheus-docker-compose_monitor
+    external: true
