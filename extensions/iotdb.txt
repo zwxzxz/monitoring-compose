@@ -1,0 +1,5 @@
+iotdb无需进行使用exporter监控，iotdb服务自带metrics接口
+本人使用iotdb版本:0.13.4
+修改conf/iotdb-metric.yml 中 enableMetric: true ，其他默认(按需修改)
+
+prometheus监控在配置文件配置即可

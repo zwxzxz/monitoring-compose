@@ -1,0 +1,14 @@
+clickhouse无需进行使用exporter监控，自带metrics接口
+本人使用clickhouse版本:v23.5.3.24-stable
+安装后修改/etc/clickhouse-server/config.xml，打开    
+    <prometheus>
+        <endpoint>/metrics</endpoint>
+        <port>9363</port>
+
+        <metrics>true</metrics>
+        <events>true</events>
+        <asynchronous_metrics>true</asynchronous_metrics>
+        <status_info>true</status_info>
+    </prometheus>
+
+prometheus监控在配置文件配置即可
