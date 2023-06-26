@@ -25,6 +25,22 @@ scrape_configs:
     labels:
       instance: prometheus
 
+- job_name: alertmanager
+  scrape_interval: 15s
+  static_configs:
+  - targets:
+    - alertmanager:9093
+    labels:
+      instance: alertmanager
+
+- job_name: pushgateway
+  scrape_interval: 15s
+  static_configs:
+  - targets:
+    - pushgateway:9091
+    labels:
+      instance: pushgateway
+
 - job_name: node
   scrape_interval: 30s
   static_configs:

@@ -84,6 +84,20 @@ services:
     depends_on:
       - alertmanager
 
+  pushgateway:
+    image: prom/pushgateway
+    container_name: pushgateway
+    expose:
+      - 9091
+    ports:
+      - "19091:9091"
+    networks:
+      - monitor
+    restart: unless-stopped
+    depends_on:
+      - cadvisor
+
+
 networks:
   monitor:
     driver: bridge
