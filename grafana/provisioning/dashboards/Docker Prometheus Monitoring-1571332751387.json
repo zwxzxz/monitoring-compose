@@ -31,7 +31,7 @@
       },
       "id": 17,
       "panels": [],
-      "title": "Host Info",
+      "title": "主机基本信息",
       "type": "row"
     },
     {
@@ -104,7 +104,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Uptime",
+      "title": "Prometheus运行时间",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -188,7 +188,7 @@
       "thresholds": "",
       "timeFrom": null,
       "timeShift": null,
-      "title": "CPU Cores",
+      "title": "CPU 核心数",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -269,7 +269,7 @@
         }
       ],
       "thresholds": "0,1",
-      "title": "Alerts",
+      "title": "异常告警",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -350,7 +350,7 @@
         }
       ],
       "thresholds": "0,1",
-      "title": "Targets Online",
+      "title": "在线数量",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -431,7 +431,7 @@
         }
       ],
       "thresholds": "0,1",
-      "title": "Running Containers",
+      "title": "运行容器数",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -515,7 +515,7 @@
       "thresholds": "",
       "timeFrom": null,
       "timeShift": null,
-      "title": "Host Memory",
+      "title": "主机内存",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -601,7 +601,7 @@
         }
       ],
       "thresholds": "65, 90",
-      "title": "Memory usage",
+      "title": "内存使用量",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -689,7 +689,7 @@
         }
       ],
       "thresholds": "65, 90",
-      "title": "CPU usage",
+      "title": "CPU 使用量",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -767,7 +767,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg( node_filesystem_avail_bytes {mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"})",
+          "expr": "100 - avg( node_filesystem_avail_bytes {mountpoint=\"/data\"} / node_filesystem_size_bytes{mountpoint=\"/data\"}) * 100",
           "interval": "10s",
           "intervalFactor": 1,
           "metric": "",
@@ -776,7 +776,7 @@
         }
       ],
       "thresholds": "65, 90",
-      "title": "Filesystem usage",
+      "title": "磁盘使用量",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -837,7 +837,7 @@
           "format": "time_series",
           "interval": "2m",
           "intervalFactor": 2,
-          "legendFormat": "RECEIVE",
+          "legendFormat": "接收",
           "refId": "A"
         },
         {
@@ -845,7 +845,7 @@
           "format": "time_series",
           "interval": "2m",
           "intervalFactor": 2,
-          "legendFormat": "TRANSMIT",
+          "legendFormat": "发送",
           "refId": "B"
         }
       ],
@@ -853,7 +853,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Node Network Traffic",
+      "title": "节点网络流量",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -938,7 +938,7 @@
           "format": "time_series",
           "interval": "2m",
           "intervalFactor": 2,
-          "legendFormat": "Used Memory",
+          "legendFormat": "已用内存",
           "refId": "B"
         },
         {
@@ -946,7 +946,7 @@
           "format": "time_series",
           "interval": "2m",
           "intervalFactor": 2,
-          "legendFormat": "Available Memory",
+          "legendFormat": "可用内存",
           "refId": "A"
         }
       ],
@@ -954,7 +954,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Node Mermory",
+      "title": "节点内存",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1038,11 +1038,11 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(node_filesystem_free_bytes {job=\"node-exporter\", instance=~\".*9100\", device=~\"/dev/.*\", mountpoint!=\"/var/lib/docker/aufs\"}) ",
+          "expr": "sum(node_filesystem_free_bytes {job=\"node\", instance=~\"node\", device=~\"/dev/.*\", mountpoint=\"/data\"}) ",
           "format": "time_series",
           "interval": "2m",
           "intervalFactor": 2,
-          "legendFormat": "Free Storage",
+          "legendFormat": "剩余空间",
           "refId": "A"
         }
       ],
@@ -1050,7 +1050,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Filesystem Available",
+      "title": "磁盘可用空间",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1100,7 +1100,7 @@
       "id": 19,
       "panels": [],
       "repeat": null,
-      "title": "Container Performance",
+      "title": "运行容器分析",
       "type": "row"
     },
     {
@@ -1167,7 +1167,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Container CPU usage",
+      "title": "容器 CPU 使用率",
       "tooltip": {
         "msResolution": true,
         "shared": true,
@@ -1269,7 +1269,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Container Memory Usage",
+      "title": "容器内存使用率",
       "tooltip": {
         "msResolution": false,
         "shared": true,
@@ -1357,7 +1357,7 @@
           "refId": "A"
         }
       ],
-      "title": "Alerts",
+      "title": "告警详情",
       "transform": "table",
       "type": "table"
     },
@@ -1424,7 +1424,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Container Network Input",
+      "title": "容器网络流入",
       "tooltip": {
         "msResolution": false,
         "shared": true,
@@ -1525,7 +1525,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Container Network Output",
+      "title": "容器网络流出",
       "tooltip": {
         "msResolution": false,
         "shared": true,
@@ -1634,7 +1634,7 @@
           "refId": "C"
         }
       ],
-      "title": "Running Versions",
+      "title": "运行版本",
       "transform": "table",
       "type": "table"
     }
@@ -1825,7 +1825,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Docker Prometheus Monitoring",
+  "title": "容器监控",
   "uid": "64nrElFmk",
   "version": 2
 }
