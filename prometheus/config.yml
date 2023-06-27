@@ -42,7 +42,7 @@ scrape_configs:
       instance: pushgateway
 
 - job_name: node
-  scrape_interval: 30s
+  scrape_interval: 15s
   static_configs:
   - targets:
     - node-exporter:9100

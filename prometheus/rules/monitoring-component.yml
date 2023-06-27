@@ -1,0 +1,96 @@
+groups:
+
+- name: '监控组件规则'
+  rules:
+
+    - alert: Prometheus状态
+      expr: 'absent(up{job="prometheus"})'
+      for: 0m
+      labels:
+        severity: warning
+      annotations:
+        summary: Prometheus 服务丢失 (实例 {{ $labels.instance }})
+        description: "Prometheus 服务丢失\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+    - alert: 主机状态 
+      expr: 'up == 0'
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: 主机宕机 (实例 {{ $labels.instance }})
+        description: "有主机宕机\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+    - alert: Prometheus配置加载失败
+      expr: 'prometheus_config_last_reload_successful != 1'
+      for: 0m
+      labels:
+        severity: warning
+      annotations:
+        summary: Prometheus 配置重新加载失败 (instance {{ $labels.instance }})
+        description: "Prometheus 配置重新加载错误\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+    - alert: 监控组件多次重启
+      expr: 'changes(process_start_time_seconds{job=~"prometheus|pushgateway|alertmanager"}[15m]) > 2'
+      for: 0m
+      labels:
+        severity: warning
+      annotations:
+        summary: 监控组件多次重新启动 (实例 {{ $labels.instance }})
+        description: "组件在15分钟内已经重新启动2次以上\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+    - alert: Alertmanager状态
+      expr: 'absent(up{job="alertmanager"})'
+      for: 0m
+      labels:
+        severity: warning
+      annotations:
+        summary: AlertManager 服务丢失 (instance {{ $labels.instance }})
+        description: "AlertManager服务丢失\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+    - alert: Alertmanager配置加载失败
+      expr: 'alertmanager_config_last_reload_successful != 1'
+      for: 0m
+      labels:
+        severity: warning
+      annotations:
+        summary: AlertManager 配置重新加载错误 (instance {{ $labels.instance }})
+        description: "AlertManager 配置重新加载失败\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+    - alert: Prometheus不能连接到Alertmanager
+      expr: 'prometheus_notifications_alertmanagers_discovered < 1'
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: Prometheus 不能连接到 Alertmanager (instance {{ $labels.instance }})
+        description: "Prometheus 不能和 alertmanager通信\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+    - alert: Prometheus告警规则文件评估
+      expr: 'increase(prometheus_rule_evaluation_failures_total[3m]) > 0'
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: Prometheus rule 评估失败 (instance {{ $labels.instance }})
+        description: "Prometheus 遇见 {{ $value }} 规则验证失败, 可能导致告警被忽略\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+    - alert: Prometheus规则评估速度
+      expr: 'prometheus_rule_group_last_duration_seconds > prometheus_rule_group_interval_seconds'
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: Prometheus rule 评估速度慢 (instance {{ $labels.instance }})
+        description: "Prometheus规则评估所花费的时间超过了预定的间隔。表明存储后端访问较慢或查询过于复杂\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+    - alert: Alertmanager发送通知失败
+      expr: 'rate(alertmanager_notifications_failed_total[1m]) > 0'
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: AlertManager 发送通知失败 (instance {{ $labels.instance }})
+        description: "Alertmanager 失败发送通知\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+
