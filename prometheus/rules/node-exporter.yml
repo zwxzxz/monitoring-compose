@@ -20,7 +20,7 @@ groups:
         summary: 主机内存未得到充分利用 (instance {{ $labels.instance }})
         description: "节点内存在1周内<20%，请考虑减少内存空间 (instance {{ $labels.instance }})\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
 
-    - alert: 主机异常网络吞吐量
+    - alert: 主机异常网络吞吐量(未实现)
       expr: '(sum by (instance) (rate(node_network_receive_bytes_total[2m])) / 1024 / 1024 > 100) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
       for: 5m
       labels:
@@ -29,7 +29,7 @@ groups:
         summary: Host unusual network throughput in (instance {{ $labels.instance }})
         description: "Host network interfaces are probably receiving too much data (> 100 MB/s)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
 
-    - alert: HostUnusualNetworkThroughputOut
+    - alert: 主机异常网络吞吐量(未实现)
       expr: '(sum by (instance) (rate(node_network_transmit_bytes_total[2m])) / 1024 / 1024 > 100) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
       for: 5m
       labels:
@@ -38,7 +38,7 @@ groups:
         summary: Host unusual network throughput out (instance {{ $labels.instance }})
         description: "Host network interfaces are probably sending too much data (> 100 MB/s)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
 
-    - alert: HostUnusualDiskReadRate
+    - alert: 主机异常磁盘读取速率(未实现)
       expr: '(sum by (instance) (rate(node_disk_read_bytes_total[2m])) / 1024 / 1024 > 50) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
       for: 5m
       labels:
@@ -47,7 +47,7 @@ groups:
         summary: Host unusual disk read rate (instance {{ $labels.instance }})
         description: "Disk is probably reading too much data (> 50 MB/s)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
 
-    - alert: HostUnusualDiskWriteRate
+    - alert: 主机异常磁盘写入速率(未实现)
       expr: '(sum by (instance) (rate(node_disk_written_bytes_total[2m])) / 1024 / 1024 > 50) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
       for: 2m
       labels:

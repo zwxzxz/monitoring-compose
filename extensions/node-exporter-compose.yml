@@ -6,8 +6,13 @@ services:
     container_name: node-exporter 
     volumes:
       - /:/host:ro,rslave
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
     command: 
       - '--path.rootfs=/host'
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|etc|run|host)($$|/)'
     expose:
       - '9100'
     networks:
