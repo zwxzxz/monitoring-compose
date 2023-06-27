@@ -5,18 +5,23 @@ services:
     image: quay.io/prometheus/node-exporter:latest
     container_name: node-exporter 
     volumes:
-      - /:/host:ro,rslave
+      - /:/host/root:ro,rslave
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
     command: 
-      - '--path.rootfs=/host'
+      - '--web.listen-address=0.0.0.0:19100'
+      - '--path.rootfs=/host/root'
       - '--path.procfs=/host/proc'
       - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|etc|run|host)($$|/)'
+      - '--no-collector.wifi'
+      - '--no-collector.hwmon'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|run)($$|/)'
     expose:
       - '9100'
-    networks:
-      - monitor
+    network_mode: host
+    pid: host
+    #networks:
+    #  - monitor
     #depends_on:
     #  - prometheus
     restart: always
