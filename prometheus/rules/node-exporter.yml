@@ -1,24 +1,23 @@
 groups:
 - name: NodeExporter
   rules:
-
     - alert: 主机内存使用量>80%
-      expr: '(node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 20) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
+      expr: '(100 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100) > 80) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
       for: 2m
       labels:
-        severity: warning
+        severity: 严重告警
       annotations:
-        summary: 节点内存大于80% (instance {{ $labels.instance }})
-        description: " 节点内存告警(> 80%)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+        summary: 节点已用内存空间大于80%
+        description: " 节点内存告警(> 80%) <br/> 节点：{{$labels.nodename}} <br/> 已用内存：{{ $value }}"
 
     - alert: 主机内存使用量<20%，已持续一周
       expr: '((1 - (node_memory_MemAvailable_bytes / (node_memory_MemTotal_bytes))) * 100 < 20) * on(instance) group_left(nodename) node_uname_info{nodename=~".+"}'
       for: 1w
       labels:
-        severity: info
+        severity: 提示信息
       annotations:
-        summary: 主机内存未得到充分利用 (instance {{ $labels.instance }})
-        description: "节点内存在1周内<20%，请考虑减少内存空间 (instance {{ $labels.instance }})\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+        summary: 主机内存未得到充分利用
+        description: "节点内存在1周内<20%，请考虑减少内存空间 <br/> 节点：{{$labels.nodename}} <br/> 已用内存：{{ $value }}"
 
     - alert: 主机异常网络吞吐量(未实现)
       expr: '(sum by (instance) (rate(node_network_receive_bytes_total[2m])) / 1024 / 1024 > 100) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
@@ -56,272 +55,93 @@ groups:
         summary: Host unusual disk write rate (instance {{ $labels.instance }})
         description: "Disk is probably writing too much data (> 50 MB/s)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
 
-    - alert: HostOutOfDiskSpace
-      expr: '((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes < 10 and ON (instance, device, mountpoint) node_filesystem_readonly == 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
+    - alert: 主机磁盘空间不足
+      expr: '(100 - (node_filesystem_free_bytes{fstype=~"ext4|xfs"} / node_filesystem_size_bytes{fstype=~"ext4|xfs"} * 100) > 80 ) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
       for: 2m
       labels:
-        severity: warning
+        severity: 严重告警
       annotations:
-        summary: Host out of disk space (instance {{ $labels.instance }})
-        description: "Disk is almost full (< 10% left)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+        summary: 主机磁盘空间不足
+        description: "磁盘使用空间大于80% <br/> 节点：{{$labels.nodename}} <br/> 已用磁盘空间：{{ $value }}% <br/> 挂载点：{{$labels.mountpoint}} "
 
-    - alert: HostDiskWillFillIn24Hours
+    - alert: 主机磁盘将在24小时内填满(未测试)
       expr: '((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes < 10 and ON (instance, device, mountpoint) predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs"}[1h], 24 * 3600) < 0 and ON (instance, device, mountpoint) node_filesystem_readonly == 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
       for: 2m
       labels:
         severity: warning
       annotations:
         summary: Host disk will fill in 24 hours (instance {{ $labels.instance }})
-        description: "Filesystem is predicted to run out of space within the next 24 hours at current write rate\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+        description: "预计文件系统将在未来24小时内以当前写入速率耗尽空间 VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
 
-    - alert: HostOutOfInodes
-      expr: '(node_filesystem_files_free / node_filesystem_files * 100 < 10 and ON (instance, device, mountpoint) node_filesystem_readonly == 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
+    - alert: 主机索引节点(inodes)不足
+      expr: '(100 - (node_filesystem_files_free / node_filesystem_files * 100) > 80 and on(instance, device, mountpoint) node_filesystem_readonly == 0) * on(instance) group_left(nodename) node_uname_info{nodename=~".+"}'
       for: 2m
       labels:
-        severity: warning
+        severity: 普通告警
       annotations:
-        summary: Host out of inodes (instance {{ $labels.instance }})
-        description: "Disk is almost running out of available inodes (< 10% left)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+        summary: 主机索引节点(inodes)不足
+        description: "磁盘的可用索引节点剩余<20% <br/> 节点：{{$labels.nodename}} <br/> 已用索引节点：{{ $value }}% <br/> 挂载点：{{$labels.mountpoint}} "
 
-    - alert: HostInodesWillFillIn24Hours
-      expr: '(node_filesystem_files_free / node_filesystem_files * 100 < 10 and predict_linear(node_filesystem_files_free[1h], 24 * 3600) < 0 and ON (instance, device, mountpoint) node_filesystem_readonly == 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
+    - alert: 主机磁盘读取延迟异常
+      expr: '(rate(node_disk_read_time_seconds_total[1m]) / rate(node_disk_reads_completed_total[1m]) * 1000 > 100 and rate(node_disk_reads_completed_total[1m]) > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
       for: 2m
       labels:
-        severity: warning
+        severity: 普通告警 
       annotations:
-        summary: Host inodes will fill in 24 hours (instance {{ $labels.instance }})
-        description: "Filesystem is predicted to run out of inodes within the next 24 hours at current write rate\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+        summary: 主机磁盘读取延迟异常
+        description: "磁盘延迟正在增长（读取操作> 100 毫秒）<br/> 节点：{{$labels.nodename}} <br/> 延迟：{{ $value }}毫秒 "
 
-    - alert: HostUnusualDiskReadLatency
-      expr: '(rate(node_disk_read_time_seconds_total[1m]) / rate(node_disk_reads_completed_total[1m]) > 0.1 and rate(node_disk_reads_completed_total[1m]) > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
+    - alert: 主机磁盘写入延迟异常
+      expr: '(rate(node_disk_write_time_seconds_total[1m]) / rate(node_disk_writes_completed_total[1m]) * 1000 > 100 and rate(node_disk_writes_completed_total[1m]) > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
       for: 2m
       labels:
-        severity: warning
+        severity: 普通告警
       annotations:
-        summary: Host unusual disk read latency (instance {{ $labels.instance }})
-        description: "Disk latency is growing (read operations > 100ms)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+        summary: 主机磁盘写入延迟异常
+        description: "磁盘延迟正在增长（写入操作> 100 毫秒）<br/> 节点：{{$labels.nodename}} <br/> 延迟：{{ $value }}毫秒"
 
-    - alert: HostUnusualDiskWriteLatency
-      expr: '(rate(node_disk_write_time_seconds_total[1m]) / rate(node_disk_writes_completed_total[1m]) > 0.1 and rate(node_disk_writes_completed_total[1m]) > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 2m
-      labels:
-        severity: warning
-      annotations:
-        summary: Host unusual disk write latency (instance {{ $labels.instance }})
-        description: "Disk latency is growing (write operations > 100ms)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostHighCpuLoad
-      expr: '(sum by (instance) (avg by (mode, instance) (rate(node_cpu_seconds_total{mode!="idle"}[2m]))) > 0.8) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
+    - alert: 主机高CPU负载
+      expr: '(100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 60) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
       for: 10m
       labels:
-        severity: warning
+        severity: 严重告警
       annotations:
-        summary: Host high CPU load (instance {{ $labels.instance }})
-        description: "CPU load is > 80%\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+        summary: CPU使用率过高
+        description: "CPU使用率大于60% <br/> 节点：{{$labels.nodename}} <br/> 当前使用率：{{ $value }}毫秒"
 
-    - alert: HostCpuIsUnderutilized
-      expr: '(100 - (rate(node_cpu_seconds_total{mode="idle"}[30m]) * 100) < 20) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 1w
-      labels:
-        severity: info
-      annotations:
-        summary: Host CPU is underutilized (instance {{ $labels.instance }})
-        description: "CPU load is < 20% for 1 week. Consider reducing the number of CPUs.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostCpuStealNoisyNeighbor
-      expr: '(avg by(instance) (rate(node_cpu_seconds_total{mode="steal"}[5m])) * 100 > 10) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 0m
-      labels:
-        severity: warning
-      annotations:
-        summary: Host CPU steal noisy neighbor (instance {{ $labels.instance }})
-        description: "CPU steal is > 10%. A noisy neighbor is killing VM performances or a spot instance may be out of credit.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostCpuHighIowait
+    - alert: 主机CPU iowait
       expr: '(avg by (instance) (rate(node_cpu_seconds_total{mode="iowait"}[5m])) * 100 > 10) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 0m
+      for: 2m
       labels:
-        severity: warning
+        severity: 提示信息
       annotations:
-        summary: Host CPU high iowait (instance {{ $labels.instance }})
-        description: "CPU iowait > 10%. A high iowait means that you are disk or network bound.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+        summary: 主机CPU高iowait
+        description: "CPU iowait>10%。高iowait表示受到磁盘或网络限制 <br/> 节点：{{$labels.nodename}} <br/> 当前iowait：{{ $value }}"
 
-    - alert: HostUnusualDiskIo
+    - alert: 主机异常磁盘IO
       expr: '(rate(node_disk_io_time_seconds_total[1m]) > 0.5) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
       for: 5m
       labels:
-        severity: warning
+        severity: 普通告警
       annotations:
-        summary: Host unusual disk IO (instance {{ $labels.instance }})
-        description: "Time spent in IO is too high on {{ $labels.instance }}. Check storage for issues.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+        summary: 主机异常磁盘IO
+        description: "在{{ $labels.nodename }}上花费在IO上的时间太长。检查存储是否存在问题。"
 
-    - alert: HostContextSwitching
-      expr: '((rate(node_context_switches_total[5m])) / (count without(cpu, mode) (node_cpu_seconds_total{mode="idle"})) > 10000) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 0m
-      labels:
-        severity: warning
-      annotations:
-        summary: Host context switching (instance {{ $labels.instance }})
-        description: "Context switching is growing on the node (> 10000 / s)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostSwapIsFillingUp
-      expr: '((1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) * 100 > 80) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 2m
-      labels:
-        severity: warning
-      annotations:
-        summary: Host swap is filling up (instance {{ $labels.instance }})
-        description: "Swap is filling up (>80%)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostSystemdServiceCrashed
-      expr: '(node_systemd_unit_state{state="failed"} == 1) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 0m
-      labels:
-        severity: warning
-      annotations:
-        summary: Host systemd service crashed (instance {{ $labels.instance }})
-        description: "systemd service crashed\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostPhysicalComponentTooHot
-      expr: '((node_hwmon_temp_celsius * ignoring(label) group_left(instance, job, node, sensor) node_hwmon_sensor_label{label!="tctl"} > 75)) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 5m
-      labels:
-        severity: warning
-      annotations:
-        summary: Host physical component too hot (instance {{ $labels.instance }})
-        description: "Physical hardware component too hot\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostNodeOvertemperatureAlarm
-      expr: '(node_hwmon_temp_crit_alarm_celsius == 1) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 0m
-      labels:
-        severity: critical
-      annotations:
-        summary: Host node overtemperature alarm (instance {{ $labels.instance }})
-        description: "Physical node temperature alarm triggered\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostRaidArrayGotInactive
-      expr: '(node_md_state{state="inactive"} > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 0m
-      labels:
-        severity: critical
-      annotations:
-        summary: Host RAID array got inactive (instance {{ $labels.instance }})
-        description: "RAID array {{ $labels.device }} is in a degraded state due to one or more disk failures. The number of spare drives is insufficient to fix the issue automatically.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostRaidDiskFailure
-      expr: '(node_md_disks{state="failed"} > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 2m
-      labels:
-        severity: warning
-      annotations:
-        summary: Host RAID disk failure (instance {{ $labels.instance }})
-        description: "At least one device in RAID array on {{ $labels.instance }} failed. Array {{ $labels.md_device }} needs attention and possibly a disk swap\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostKernelVersionDeviations
-      expr: '(count(sum(label_replace(node_uname_info, "kernel", "$1", "release", "([0-9]+.[0-9]+.[0-9]+).*")) by (kernel)) > 1) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 6h
-      labels:
-        severity: warning
-      annotations:
-        summary: Host kernel version deviations (instance {{ $labels.instance }})
-        description: "Different kernel versions are running\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostOomKillDetected
-      expr: '(increase(node_vmstat_oom_kill[1m]) > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 0m
-      labels:
-        severity: warning
-      annotations:
-        summary: Host OOM kill detected (instance {{ $labels.instance }})
-        description: "OOM kill detected\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostEdacCorrectableErrorsDetected
-      expr: '(increase(node_edac_correctable_errors_total[1m]) > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 0m
-      labels:
-        severity: info
-      annotations:
-        summary: Host EDAC Correctable Errors detected (instance {{ $labels.instance }})
-        description: "Host {{ $labels.instance }} has had {{ printf \"%.0f\" $value }} correctable memory errors reported by EDAC in the last 5 minutes.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostEdacUncorrectableErrorsDetected
-      expr: '(node_edac_uncorrectable_errors_total > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 0m
-      labels:
-        severity: warning
-      annotations:
-        summary: Host EDAC Uncorrectable Errors detected (instance {{ $labels.instance }})
-        description: "Host {{ $labels.instance }} has had {{ printf \"%.0f\" $value }} uncorrectable memory errors reported by EDAC in the last 5 minutes.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostNetworkReceiveErrors
-      expr: '(rate(node_network_receive_errs_total[2m]) / rate(node_network_receive_packets_total[2m]) > 0.01) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 2m
-      labels:
-        severity: warning
-      annotations:
-        summary: Host Network Receive Errors (instance {{ $labels.instance }})
-        description: "Host {{ $labels.instance }} interface {{ $labels.device }} has encountered {{ printf \"%.0f\" $value }} receive errors in the last two minutes.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostNetworkTransmitErrors
-      expr: '(rate(node_network_transmit_errs_total[2m]) / rate(node_network_transmit_packets_total[2m]) > 0.01) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 2m
-      labels:
-        severity: warning
-      annotations:
-        summary: Host Network Transmit Errors (instance {{ $labels.instance }})
-        description: "Host {{ $labels.instance }} interface {{ $labels.device }} has encountered {{ printf \"%.0f\" $value }} transmit errors in the last two minutes.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostNetworkInterfaceSaturated
-      expr: '((rate(node_network_receive_bytes_total{device!~"^tap.*|^vnet.*|^veth.*|^tun.*"}[1m]) + rate(node_network_transmit_bytes_total{device!~"^tap.*|^vnet.*|^veth.*|^tun.*"}[1m])) / node_network_speed_bytes{device!~"^tap.*|^vnet.*|^veth.*|^tun.*"} > 0.8 < 10000) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 1m
-      labels:
-        severity: warning
-      annotations:
-        summary: Host Network Interface Saturated (instance {{ $labels.instance }})
-        description: "The network interface \"{{ $labels.device }}\" on \"{{ $labels.instance }}\" is getting overloaded.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostNetworkBondDegraded
-      expr: '((node_bonding_active - node_bonding_slaves) != 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 2m
-      labels:
-        severity: warning
-      annotations:
-        summary: Host Network Bond Degraded (instance {{ $labels.instance }})
-        description: "Bond \"{{ $labels.device }}\" degraded on \"{{ $labels.instance }}\".\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostConntrackLimit
-      expr: '(node_nf_conntrack_entries / node_nf_conntrack_entries_limit > 0.8) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 5m
-      labels:
-        severity: warning
-      annotations:
-        summary: Host conntrack limit (instance {{ $labels.instance }})
-        description: "The number of conntrack is approaching limit\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
-
-    - alert: HostClockSkew
+    - alert: 主机时钟偏差
       expr: '((node_timex_offset_seconds > 0.05 and deriv(node_timex_offset_seconds[5m]) >= 0) or (node_timex_offset_seconds < -0.05 and deriv(node_timex_offset_seconds[5m]) <= 0)) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
       for: 2m
       labels:
-        severity: warning
+        severity: 普通告警
       annotations:
-        summary: Host clock skew (instance {{ $labels.instance }})
-        description: "Clock skew detected. Clock is out of sync. Ensure NTP is configured correctly on this host.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+        summary: 检测到时钟偏差
+        description: "检测到时钟偏差，时钟不同步，确保在此{{ $labels.nodename }}主机上正确配置NTP"
 
-    - alert: HostClockNotSynchronising
+    - alert: 主机时钟不同步
       expr: '(min_over_time(node_timex_sync_status[1m]) == 0 and node_timex_maxerror_seconds >= 16) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
       for: 2m
       labels:
-        severity: warning
+        severity: 普通告警
       annotations:
-        summary: Host clock not synchronising (instance {{ $labels.instance }})
-        description: "Clock not synchronising. Ensure NTP is configured on this host.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+        summary: 主机时钟不同步
+        description: "时钟不同步。确保在此{{ $labels.nodename }}主机上配置了NTP"
 
-    - alert: HostRequiresReboot
-      expr: '(node_reboot_required > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 4h
-      labels:
-        severity: info
-      annotations:
-        summary: Host requires reboot (instance {{ $labels.instance }})
-        description: "{{ $labels.instance }} requires a reboot.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"

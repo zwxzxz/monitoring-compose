@@ -7,7 +7,7 @@ groups:
     expr: up == 0
     for: 2m
     labels:
-      severity: page
+      severity: <strong><font color=red>page</font></strong>
     annotations:
       summary: "Instance {{ $labels.instance }} down"
       description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 2 minutes."

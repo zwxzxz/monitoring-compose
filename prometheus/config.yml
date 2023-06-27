@@ -48,6 +48,10 @@ scrape_configs:
     - node-exporter:9100
     labels:
       instance: docker-node-exporter
+  - targets:
+    - k8s-master:19100
+    labels:
+      instance: docker-node-exporter
 
 - job_name: 'cadvisor'
   scrape_interval: 15s
