@@ -23,7 +23,7 @@ scrape_configs:
   - targets: 
     - localhost:9090
     labels:
-      instance: prometheus
+      instance: docker-prometheus
 
 - job_name: alertmanager
   scrape_interval: 15s
@@ -31,7 +31,7 @@ scrape_configs:
   - targets:
     - alertmanager:9093
     labels:
-      instance: alertmanager
+      instance: docker-alertmanager
 
 - job_name: pushgateway
   scrape_interval: 15s
@@ -39,7 +39,7 @@ scrape_configs:
   - targets:
     - pushgateway:9091
     labels:
-      instance: pushgateway
+      instance: docker-pushgateway
 
 - job_name: node
   scrape_interval: 15s
@@ -47,45 +47,43 @@ scrape_configs:
   - targets:
     - node-exporter:9100
     labels:
-      instance: node
+      instance: docker-node-exporter
 
 - job_name: 'cadvisor'
   scrape_interval: 15s
   static_configs:
   - targets: ['cadvisor:8080']
+    labels:
+      instance: docker-cadvisor
 
 - job_name: 'mysqld'
   scrape_interval: 15s
   static_configs:
   - targets: ['mysqld-exporter:9104']
     labels:
-      instance: mysql
+      instance: docker-mysql-exporter
 
 - job_name: kafka
   scrape_interval: 15s
   static_configs:
   - targets: ['kafka-exporter:9308']
     labels:
-      instance: kafka
+      instance: docker-kafka-exporter
 
 - job_name: redis
   scrape_interval: 15s
   static_configs:
   - targets: ['redis-exporter:9121']
     labels:
-      instance: redis
+      instance: docker-redis-exporter
 
 - job_name: iotdb
   scrape_interval: 15s
   static_configs:
   - targets: ['8.130.140.140:9091']
-    labels:
-      instance: iotdb
 
 - job_name: clickhouse
   scrape_interval: 15s
   static_configs:
   - targets: ['8.130.140.140:9363']
-    labels:
-      instance: clickhouse
 

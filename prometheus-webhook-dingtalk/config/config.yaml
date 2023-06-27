@@ -16,9 +16,9 @@
 #   text: '{{ template "legacy.content" . }}'
 targets:
   webhook1:
-    url: https://oapi.dingtalk.com/robot/send?access_token=xxxxxxxxxxxxxxxx
+    url: https://oapi.dingtalk.com/robot/send?access_token=de9c570f5d88ca0aeba494fda88caf21b214a50ac37bd1bae8bad7769512ef65a
     # secret for signature
-    secret: SECe1571e5f086a5203f17cxxxxxxxxxxxxxx
+    secret: SEC25634c2271f1c5526a0ceee283ac77343b880ca80562bd725c5bc0c715ed0130
   webhook2:
     url: https://oapi.dingtalk.com/robot/send?access_token=xxxxxxxxxxxx
   webhook_legacy:
