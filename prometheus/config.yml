@@ -45,10 +45,6 @@ scrape_configs:
   scrape_interval: 15s
   static_configs:
   - targets:
-    - node-exporter:9100
-    labels:
-      instance: docker-node-exporter
-  - targets:
     - k8s-master:19100
     labels:
       instance: docker-node-exporter
@@ -60,7 +56,7 @@ scrape_configs:
     labels:
       instance: docker-cadvisor
 
-- job_name: 'mysqld'
+- job_name: 'mysql'
   scrape_interval: 15s
   static_configs:
   - targets: ['mysqld-exporter:9104']

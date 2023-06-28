@@ -56,7 +56,7 @@ groups:
         description: "Disk is probably writing too much data (> 50 MB/s)\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
 
     - alert: 主机磁盘空间不足
-      expr: '(100 - (node_filesystem_free_bytes{fstype=~"ext4|xfs"} / node_filesystem_size_bytes{fstype=~"ext4|xfs"} * 100) > 80 ) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
+      expr: '(100 - (node_filesystem_free_bytes{fstype=~"ext.*|xfs"} / node_filesystem_size_bytes{fstype=~"ext.*|xfs"} * 100) > 80 ) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
       for: 2m
       labels:
         severity: 严重告警
@@ -84,7 +84,7 @@ groups:
 
     - alert: 主机磁盘读取延迟异常
       expr: '(rate(node_disk_read_time_seconds_total[1m]) / rate(node_disk_reads_completed_total[1m]) * 1000 > 100 and rate(node_disk_reads_completed_total[1m]) > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
-      for: 2m
+      for: 5m
       labels:
         severity: 普通告警 
       annotations:
@@ -127,6 +127,15 @@ groups:
         summary: 主机异常磁盘IO
         description: "在{{ $labels.nodename }}上花费在IO上的时间太长 <br/> 当前值：{{ $value }}"
 
+    - alert: 主机TCP会话
+      expr: 'node_netstat_Tcp_CurrEstab > 1000'
+      for: 1m
+      labels:
+        status: 严重告警
+      annotations:
+        summary: 主机TCP连接数过高
+        description: "主机{{$labels.nodename }}TCP连接数大于1000 <br/> 目前连接数：{{ $value }}"
+
     - alert: 主机时钟偏差
       expr: '((node_timex_offset_seconds > 0.05 and deriv(node_timex_offset_seconds[5m]) >= 0) or (node_timex_offset_seconds < -0.05 and deriv(node_timex_offset_seconds[5m]) <= 0)) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
       for: 2m
@@ -137,7 +146,7 @@ groups:
         description: "检测到时钟偏差，时钟不同步，确保在此{{ $labels.nodename }}主机上正确配置NTP"
 
     - alert: 主机时钟不同步
-      expr: '(min_over_time(node_timex_sync_status[1m]) == 0 and node_timex_maxerror_seconds >= 16) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
+      expr: '(min_over_time(node_timex_sync_status[5m]) == 0 and node_timex_maxerror_seconds >= 16) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
       for: 2m
       labels:
         severity: 普通告警
