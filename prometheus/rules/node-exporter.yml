@@ -119,13 +119,13 @@ groups:
         description: "CPU iowait>10%。高iowait表示受到磁盘或网络限制 <br/> 节点：{{$labels.nodename}} <br/> 当前iowait：{{ $value }}"
 
     - alert: 主机异常磁盘IO
-      expr: '(rate(node_disk_io_time_seconds_total[1m]) > 0.5) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
+      expr: '(rate(node_disk_io_time_seconds_total[1m]) * 100 > 50) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
       for: 5m
       labels:
         severity: 普通告警
       annotations:
         summary: 主机异常磁盘IO
-        description: "在{{ $labels.nodename }}上花费在IO上的时间太长。检查存储是否存在问题。"
+        description: "在{{ $labels.nodename }}上花费在IO上的时间太长 <br/> 当前值：{{ $value }}"
 
     - alert: 主机时钟偏差
       expr: '((node_timex_offset_seconds > 0.05 and deriv(node_timex_offset_seconds[5m]) >= 0) or (node_timex_offset_seconds < -0.05 and deriv(node_timex_offset_seconds[5m]) <= 0)) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}'
