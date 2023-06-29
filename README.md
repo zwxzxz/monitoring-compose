@@ -1,6 +1,6 @@
 # monitoring-compose
 
-本项目由工作时部署监控相关组件，，使用docker-compose方式进行项目部署，有以下基本组件：
+本项目由工作时部署监控相关组件，使用docker-compose方式进行项目部署，有以下基本组件：
 
 1. prometheus：监控核心组件
 2. alertmanage：监控报警组件
