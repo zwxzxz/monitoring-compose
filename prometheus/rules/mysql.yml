@@ -56,6 +56,15 @@ groups:
       summary: "Used more than 80% of max connections limited"
       description: "已经使用了超过最大连接限制的80%以上 <br/> 实例：{{ $labels.instance }}"
 
+  - alert: MySQL正在运行线程数超过50%
+    expr: max_over_time(mysql_global_status_threads_running[2m]) / mysql_global_variables_max_connections * 100 > 50
+    for: 2m
+    labels:
+      severity: 普通告警
+    annotations:
+      summary: MySQL high threads running
+      description: "50%以上的MySQL连接处于运行状态 <br/> 实例：{{ $labels.instance }}"
+
   - alert: MySQL启用强制恢复
     expr: mysql_global_variables_innodb_force_recovery != 0 
     for: 0m
@@ -72,7 +81,16 @@ groups:
       severity: 普通告警
     annotations:
       summary: "InnoDB Log File size is too small(小于16777216)"
-      description: "InnoDB日志文件大小可能太小，较小的InnoDB日志文件空间可能会对性能产生影响"
+      description: "InnoDB日志文件大小可能太小，较小的InnoDB日志文件空间可能会对性能产生影响  <br/> 实例：{{ $labels.instance }}"
+
+  - alert: MysqlInnodb日志停滞
+    expr: rate(mysql_global_status_innodb_log_waits[15m]) > 10
+    for: 0m
+    labels:
+      severity: 普通告警
+    annotations:
+      summary: MySQL InnoDB log waits
+      description: "MySQL InnoDB日志写入停顿  <br/> 实例：{{ $labels.instance }}"
 
 # https://www.cnblogs.com/uphold/p/11290656.html：文章介绍推荐设2 
 #  - alert: MySQL在事务提交时刷新日志
@@ -91,7 +109,7 @@ groups:
       severity: 提示信息
     annotations:
       summary: "Table definition cache too small"
-      description: "表定义缓存可能太小了，如果太小可能会对性能产生影响"
+      description: "表定义缓存可能太小了，如果太小可能会对性能产生影响  <br/> 实例：{{ $labels.instance }}"
 
 # https://dev.mysql.com/doc/refman/8.0/en/table-cache.html: table_open_cache满了会释放未使用的表或缓存临时扩展
 #  - alert: MySQL表打开缓存过小
@@ -110,7 +128,7 @@ groups:
       severity: 提示信息
     annotations:
       summary: "Thread stack size is possibly too small"
-      description: "线程堆栈大小可能过小，可能会导致问题，典型的线程栈大小为256k"
+      description: "线程堆栈大小可能过小，可能会导致问题，典型的线程栈大小为256k <br/> 实例：{{ $labels.instance }}"
 
   - alert: MySQL缓冲池实例过小
     expr: mysql_global_variables_innodb_buffer_pool_instances == 1
@@ -119,7 +137,7 @@ groups:
       severity: 普通告警
     annotations:
       summary: "InnoDB Buffer Pool Instances is too small"
-      description: "缓冲池实例过小"
+      description: "缓冲池实例过小 <br/> 实例：{{ $labels.instance }}"
 
   - alert: MySQL二进制日志禁用
     expr: mysql_global_variables_log_bin != 1
@@ -128,7 +146,7 @@ groups:
       severity: 普通告警
     annotations:
       summary: "Binary Log is disabled"
-      description: "二进制日志已禁用，将阻止进行时间点恢复(PiTR)"
+      description: "二进制日志已禁用，将阻止进行时间点恢复(PiTR) <br/> 实例：{{ $labels.instance }}"
 
   - alert: MySQL Binlog缓存太小
     expr: mysql_global_variables_binlog_cache_size < 1048576 and vector(1)
@@ -164,25 +182,34 @@ groups:
       severity: 提示信息
     annotations:
       summary: "Sync Binlog is enabled"
-      description: "启用了同步二进制日志，这会提高数据安全性，但会降低写入性能"
+      description: "启用了同步二进制日志，这会提高数据安全性，但会降低写入性能 <br/> 实例：{{ $labels.instance }}"
 
-  - alert: MySQL连接过多
-    expr: rate(mysql_global_status_threads_connected[2m])>100
+  - alert: MySQL连接过多(可自定义修改)
+    expr: rate(mysql_global_status_threads_connected[2m])>20
     for: 2m
     labels:
       severity: 普通告警
     annotations:
       summary: "Mysql_Too_Many_Connections"
-      description: "MySQL在1分钟内平均每秒连接数超过100"
+      description: "MySQL在1分钟内平均每秒连接数超过20  <br/> 实例：{{ $labels.instance }}"
 
-  - alert: MySQL慢查询过多
-    expr: rate(mysql_global_status_slow_queries[2m])>1
+  - alert: MySQL慢查询过多(可自定义修改)
+    expr: rate(mysql_global_status_slow_queries[2m])>0.5
     for: 2m
     labels:
       severity: 普通告警
     annotations:
       summary: "Mysql_Too_Many_slow_queries"
-      description: "MySQL在1分钟内平均每秒慢查询大于1条"
+      description: "MySQL在1分钟内慢查询数大于30条 <br/> 实例：{{ $labels.instance }}"
+
+  - alert: MySQL有慢查询
+    expr: increase(mysql_global_status_slow_queries[2m]) > 4
+    for: 5m
+    labels:
+      severity: 提示信息
+    annotations:
+      summary: MySQL slow queries
+      description: "MySQL服务器有一些新的慢查询 <br/> 实例：{{ $labels.instance }} <br/> 慢查询条数：{{ $value }} "
 
   - alert: MySQL 从机IO线程停止
     expr: mysql_slave_status_slave_io_running != 1
@@ -191,7 +218,7 @@ groups:
       severity: 严重告警
     annotations:
       summary: "IO thread stopped"
-      description: "IO 线程已经停止，slave服务器不能连接到Master服务器"
+      description: "IO 线程已经停止，slave服务器不能连接到Master服务器  <br/> 实例：{{ $labels.instance }}"
 
   - alert: MySQL 从机SQL线程停止 
     expr: mysql_slave_status_slave_sql_running == 0
@@ -200,7 +227,7 @@ groups:
       severity: 严重告警
     annotations:
       summary: "SQL thread stopped"
-      description: "SQL线程已停止，无法从主服务器接收到的SQL语句"
+      description: "SQL线程已停止，无法从主服务器接收到的SQL语句  <br/> 实例：{{ $labels.instance }}"
 
   - alert: MySQL 从机表现落后于主机
     expr: rate(mysql_slave_status_seconds_behind_master[2m]) >30 
@@ -209,7 +236,17 @@ groups:
       severity: 严重告警 
     annotations:
       summary: "Slave lagging behind Master"
-      description: "Slave(从服务器)表现落后于Master(主服务器)，请检查Slave线程是否正在运行，并查看是否存在性能问题"
+      description: "Slave(从服务器)表现落后于Master(主服务器)，请检查Slave线程是否正在运行，并查看是否存在性能问题  <br/> 实例：{{ $labels.instance }}"
+
+  - alert: MySQL 从机复制延迟
+    expr: ( (mysql_slave_status_seconds_behind_master - mysql_slave_status_sql_delay) and ON (instance) mysql_slave_status_master_server_id > 0 ) > 30
+    for: 1m
+    labels:
+      severity: 严重警告
+    annotations:
+      summary: MySQL Slave replication lag
+      description: "MySQL从机有复制延迟  <br/> 实例：{{ $labels.instance }}"
+
 
   - alert: MySQL 从机权限不是只读
     expr: mysql_global_variables_read_only != 0
@@ -218,4 +255,14 @@ groups:
       severity: 严重告警
     annotations:
       summary: "Slave is NOT read only(Please ignore this warning indicator.)"
-      description: "从属服务器没有设置为只读，可能会意外在从属服务器上操作数据导致不一致性"
+      description: "从属服务器没有设置为只读，可能会意外在从属服务器上操作数据导致不一致性 <br/> 实例：{{ $labels.instance }}"
+
+  - alert: MySQL重新启动
+    expr: mysql_global_status_uptime < 60
+    for: 0m
+    labels:
+      severity: 提示信息
+    annotations:
+      summary: MySQL restarted
+      description: "MySQL重新启动，运行时间不到1分钟 <br/> 实例：{{ $labels.instance }}"
+
