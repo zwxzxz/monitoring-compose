@@ -1,0 +1,221 @@
+groups:
+- name: MySQL告警
+  rules:
+
+  - alert: MySQL下线
+    expr: mysql_up == 0
+    for: 0m
+    labels:
+      severity: 严重告警
+    annotations:
+      summary: "MySQL is down"
+      description: "MySQL关闭，立即采取措施！ <br/> 实例：{{ $labels.instance }}"
+
+  - alert: MySQL打开文件数量偏高
+    expr: mysql_global_status_innodb_num_open_files > (mysql_global_variables_open_files_limit) * 0.75
+    for: 0m
+    labels:
+      severity: 普通告警
+    annotations:
+      summary: "open files high"
+      description: "打开文件数量偏高，请考虑增加open_files_limit <br/> 实例：{{ $labels.instance }}"
+
+  - alert: 读取缓存区超过数据包最大限制
+    expr: mysql_global_variables_read_buffer_size > mysql_global_variables_slave_max_allowed_packet 
+    for: 0m
+    labels:
+      severity: 普通告警
+    annotations:
+      summary: "Read buffer size is bigger than max. allowed packet size"
+      description: "读取缓冲区大小(read_buffer_size)大于允许的最大数据包大小(max_allow_pack) <br/> 实例：{{ $labels.instance }}"
+
+  - alert: 排序缓冲区可能存在配置错误
+    expr: mysql_global_variables_innodb_sort_buffer_size <256*1024 or mysql_global_variables_read_buffer_size > 4*1024*1024 
+    for: 0m
+    labels:
+      severity: 普通告警
+    annotations:
+      summary: "Sort buffer possibly missconfigured"
+      description: "排序缓冲区过大或过小， sort_buffer_size的合适值在256k和4M之间 <br/> 实例：{{ $labels.instance }}"
+
+  - alert: 线程堆栈太小
+    expr: mysql_global_variables_thread_stack <196608
+    for: 0m
+    labels:
+      severity: 普通告警
+    annotations:
+      summary: "Thread stack size is too small"
+      description: "线程堆栈空间太小，典型的线程堆栈大小为256k <br/> 实例：{{ $labels.instance }}"
+
+  - alert: MySQL连接数超过80%
+    expr: mysql_global_status_max_used_connections > mysql_global_variables_max_connections * 0.8
+    for: 0m
+    labels:
+      severity: 普通告警
+    annotations:
+      summary: "Used more than 80% of max connections limited"
+      description: "已经使用了超过最大连接限制的80%以上 <br/> 实例：{{ $labels.instance }}"
+
+  - alert: MySQL启用强制恢复
+    expr: mysql_global_variables_innodb_force_recovery != 0 
+    for: 0m
+    labels:
+      severity: 普通告警
+    annotations:
+      summary: "InnoDB Force Recovery is enabled"
+      description: "启用InnoDB强制恢复，此模式应仅用于数据恢复，此模式禁止写入数据 <br/> 实例：{{ $labels.instance }} "
+
+  - alert: MySQL日志文件空间过小
+    expr: mysql_global_variables_innodb_log_file_size < 16777216 
+    for: 0m
+    labels:
+      severity: 普通告警
+    annotations:
+      summary: "InnoDB Log File size is too small(小于16777216)"
+      description: "InnoDB日志文件大小可能太小，较小的InnoDB日志文件空间可能会对性能产生影响"
+
+# https://www.cnblogs.com/uphold/p/11290656.html：文章介绍推荐设2 
+#  - alert: MySQL在事务提交时刷新日志
+#    expr: mysql_global_variables_innodb_flush_log_at_trx_commit != 1
+#    for: 0m
+#    labels:
+#      severity: 普通告警
+#    annotations:
+#      summary: "InnoDB Flush Log at Transaction Commit"
+#      description: "'InnoDB Flush Log at Transaction Commit'被设置为一个不等于1的值。这可能会导致在断电的情况下丢失已提交的事务"
+
+  - alert: MySQL表定义缓存过小
+    expr: mysql_global_status_open_table_definitions > mysql_global_variables_table_definition_cache
+    for: 0m
+    labels:
+      severity: 提示信息
+    annotations:
+      summary: "Table definition cache too small"
+      description: "表定义缓存可能太小了，如果太小可能会对性能产生影响"
+
+# https://dev.mysql.com/doc/refman/8.0/en/table-cache.html: table_open_cache满了会释放未使用的表或缓存临时扩展
+#  - alert: MySQL表打开缓存过小
+#    expr: mysql_global_status_open_tables >mysql_global_variables_table_open_cache * 99/100
+#    for: 0m
+#    labels:
+#      severity: 提示信息
+#    annotations:
+#     summary: "Table open cache too small"
+#     description: "table_open_cache可能太小，如果它太小可能会对性能产生影响"
+
+  - alert: 线程堆栈可能过小
+    expr: mysql_global_variables_thread_stack < 262144
+    for: 0m
+    labels:
+      severity: 提示信息
+    annotations:
+      summary: "Thread stack size is possibly too small"
+      description: "线程堆栈大小可能过小，可能会导致问题，典型的线程栈大小为256k"
+
+  - alert: MySQL缓冲池实例过小
+    expr: mysql_global_variables_innodb_buffer_pool_instances == 1
+    for: 0m
+    labels:
+      severity: 普通告警
+    annotations:
+      summary: "InnoDB Buffer Pool Instances is too small"
+      description: "缓冲池实例过小"
+
+  - alert: MySQL二进制日志禁用
+    expr: mysql_global_variables_log_bin != 1
+    for: 0m
+    labels:
+      severity: 普通告警
+    annotations:
+      summary: "Binary Log is disabled"
+      description: "二进制日志已禁用，将阻止进行时间点恢复(PiTR)"
+
+  - alert: MySQL Binlog缓存太小
+    expr: mysql_global_variables_binlog_cache_size < 1048576 and vector(1)
+    for: 0m
+    labels:
+      severity: 提示信息
+    annotations:
+      summary: "Binlog Cache size too small(阿里云产品RDS是1M)"
+      description: "Binlog缓存大小可能太小，建议1Mbyte(1048576)以上 <br/> 当前值：{{ $value  }}"
+
+  - alert: MySQL Binlog Statement缓存过小
+    expr: mysql_global_variables_binlog_stmt_cache_size < 1048576 and mysql_global_variables_binlog_stmt_cache_size > 0 and vector(1)
+    for: 0m
+    labels:
+      severity: 提示信息
+    annotations:
+      summary: "Binlog Statement Cache size too small(阿里云产品RDS是32k)"
+      description: "Binlog Statement缓存大小可能太小，建议1Mbyte(1048576)以上 <br/> 当前值：{{ $value  }}"
+
+  - alert: MySQL Binlog Transaction缓存过小
+    expr: mysql_global_variables_binlog_cache_size  <1048576 and vector(1)
+    for: 0m
+    labels:
+      severity: 提示信息
+    annotations:
+      summary: "Binlog Transaction Cache size too small(阿里云产品RDS是1M)"
+      description: "Binlog Transaction缓存大小可能太小，建议1Mbyte(1048576)以上 <br/> 当前值：{{ $value  }}"
+
+  - alert: MySQL二进制日志启用
+    expr: mysql_global_variables_sync_binlog == 1
+    for: 0m
+    labels:
+      severity: 提示信息
+    annotations:
+      summary: "Sync Binlog is enabled"
+      description: "启用了同步二进制日志，这会提高数据安全性，但会降低写入性能"
+
+  - alert: MySQL连接过多
+    expr: rate(mysql_global_status_threads_connected[2m])>100
+    for: 2m
+    labels:
+      severity: 普通告警
+    annotations:
+      summary: "Mysql_Too_Many_Connections"
+      description: "MySQL在1分钟内平均每秒连接数超过100"
+
+  - alert: MySQL慢查询过多
+    expr: rate(mysql_global_status_slow_queries[2m])>1
+    for: 2m
+    labels:
+      severity: 普通告警
+    annotations:
+      summary: "Mysql_Too_Many_slow_queries"
+      description: "MySQL在1分钟内平均每秒慢查询大于1条"
+
+  - alert: MySQL 从机IO线程停止
+    expr: mysql_slave_status_slave_io_running != 1
+    for: 0m
+    labels:
+      severity: 严重告警
+    annotations:
+      summary: "IO thread stopped"
+      description: "IO 线程已经停止，slave服务器不能连接到Master服务器"
+
+  - alert: MySQL 从机SQL线程停止 
+    expr: mysql_slave_status_slave_sql_running == 0
+    for: 0m
+    labels:
+      severity: 严重告警
+    annotations:
+      summary: "SQL thread stopped"
+      description: "SQL线程已停止，无法从主服务器接收到的SQL语句"
+
+  - alert: MySQL 从机表现落后于主机
+    expr: rate(mysql_slave_status_seconds_behind_master[2m]) >30 
+    for: 0m
+    labels:
+      severity: 严重告警 
+    annotations:
+      summary: "Slave lagging behind Master"
+      description: "Slave(从服务器)表现落后于Master(主服务器)，请检查Slave线程是否正在运行，并查看是否存在性能问题"
+
+  - alert: MySQL 从机权限不是只读
+    expr: mysql_global_variables_read_only != 0
+    for: 0m
+    labels:
+      severity: 严重告警
+    annotations:
+      summary: "Slave is NOT read only(Please ignore this warning indicator.)"
+      description: "从属服务器没有设置为只读，可能会意外在从属服务器上操作数据导致不一致性"

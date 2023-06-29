@@ -57,11 +57,11 @@ scrape_configs:
       instance: docker-cadvisor
 
 - job_name: 'mysql'
-  scrape_interval: 15s
+  scrape_interval: 1m
   static_configs:
   - targets: ['mysqld-exporter:9104']
     labels:
-      instance: docker-mysql-exporter
+      instance: xxxMySQL地址 or IP
 
 - job_name: kafka
   scrape_interval: 15s
